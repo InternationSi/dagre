@@ -1,3 +1,11 @@
+/*
+ * @Author: sfy
+ * @Date: 2023-04-06 10:10:22
+ * @LastEditors: sfy
+ * @LastEditTime: 2023-04-06 11:15:41
+ * @FilePath: /dagre/karma.conf.js
+ * @Description: update here
+ */
 // Karma configuration
 // Generated on Sat Oct 18 2014 17:38:05 GMT-0700 (PDT)
 
@@ -58,7 +66,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome', 'Firefox'],
+    browsers: ['Chrome'],
 
 
     // Continuous Integration mode
