@@ -1,4 +1,12 @@
 /*
+ * @Author: sfy
+ * @Date: 2023-04-07 15:08:14
+ * @LastEditors: sfy
+ * @LastEditTime: 2023-04-07 15:22:01
+ * @FilePath: /dagre/index.js
+ * @Description: update here
+ */
+/*
 Copyright (c) 2012-2014 Chris Pettitt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,14 +28,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-module.exports = {
-  graphlib: require("./lib/graphlib"),
-
-  layout: require("./lib/layout"),
-  debug: require("./lib/debug"),
-  util: {
-    time: require("./lib/util").time,
-    notime: require("./lib/util").notime
-  },
-  version: require("./lib/version")
+module.exports =  {
+  graphlib: require("./src/d3-dagre/graphlib"),
+  dagre: require("./src/d3-dagre/dagre"),
+  intersect: require("./src/d3-dagre/intersect"),
+  render: require("./src/d3-dagre/render"),
+  util: require("./src/d3-dagre/util"),
+  version: require("./src/d3-dagre/version")
 };
