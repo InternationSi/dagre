@@ -1,3 +1,11 @@
+<!--
+ * @Author: sfy
+ * @Date: 2023-04-07 15:14:31
+ * @LastEditors: sfy
+ * @LastEditTime: 2023-04-08 21:25:47
+ * @FilePath: /dagre/demo/arrows.html
+ * @Description: update here
+-->
 
 <!doctype html>
 
@@ -6,7 +14,7 @@
 
 <link rel="stylesheet" href="demo.css">
 <script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
-<script src="../dist/main.umd.js"></script>
+<script src="../dist/index.umd.js"></script>
 
 <style id="css">
 body {
@@ -36,9 +44,10 @@ body {
 <p>A sample that shows the different arrows available in dagre-d3.
 </section>
 
-<script type="module" id="js">
+<!-- <script type="module" id="js"> -->
+<script  id="js">
 // Create a new directed graph
-import dagreD3 from '../dist/index.es.js'
+// import dagreD3 from '../dist/index.es.js'
 var g = new dagreD3.graphlib.Graph().setGraph({});
 
 ["normal", "vee", "undirected"].forEach(function(arrowhead) {
