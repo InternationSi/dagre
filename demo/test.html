@@ -1,3 +1,11 @@
+<!--
+ * @Author: sfy
+ * @Date: 2023-04-09 09:43:05
+ * @LastEditors: sfy
+ * @LastEditTime: 2023-04-09 15:04:05
+ * @FilePath: /dagre/demo/test.html
+ * @Description: update here
+-->
 <!doctype html>
 
 <meta charset="utf-8">
@@ -62,8 +70,9 @@ g.setNode(9,  { label: "DT",        class: "type-DT" });
 g.setNode(10, { label: "an",        class: "type-TK" });
 g.setNode(11, { label: "NN",        class: "type-NN" });
 g.setNode(12, { label: "example",   class: "type-TK" });
-g.setNode(13, { label: ".",         class: "type-." });
+g.setNode(13, { label: "test",         class: "type-." });
 g.setNode(14, { label: "sentence",  class: "type-TK" });
+g.setNode(15, { label: "aaew",  class: "type-TK" });
 
 g.nodes().forEach(function(v) {
   var node = g.node(v);
@@ -72,20 +81,32 @@ g.nodes().forEach(function(v) {
 });
 
 // Set up edges, no special attributes.
-g.setEdge(3, 4);
-g.setEdge(2, 3);
+g.setEdge(0, 1);
 g.setEdge(1, 2);
-g.setEdge(6, 7);
-g.setEdge(5, 6);
-g.setEdge(9, 10);
+g.setEdge(2, 3);
+g.setEdge(3, 4);
+g.setEdge(4, 5);
+
+g.setEdge(2, 6);
+g.setEdge(2, 7);
+g.setEdge(6, 8);
 g.setEdge(8, 9);
-g.setEdge(11,12);
+g.setEdge(8, 10);
 g.setEdge(8, 11);
-g.setEdge(5, 8);
-g.setEdge(1, 5);
-g.setEdge(13,14);
-g.setEdge(1, 13);
-g.setEdge(0, 1)
+g.setEdge(9, 3);
+g.setEdge(10, 3);
+g.setEdge(11, 3);
+
+g.setEdge(3, 12);
+g.setEdge(3, 15);
+g.setEdge(12, 13);
+g.setEdge(13, 14);
+g.setEdge(14, 4);
+
+
+g.setEdge(8, 13);
+g.setEdge(10, 15);
+
 
 // Create the renderer
 var render = new dagreD3.render();

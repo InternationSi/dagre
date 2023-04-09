@@ -1,0 +1,445 @@
+<!--
+ * @Author: sfy
+ * @Date: 2023-04-09 09:43:05
+ * @LastEditors: sfy
+ * @LastEditTime: 2023-04-09 16:22:17
+ * @FilePath: /dagre/demo/celions.html
+ * @Description: update here
+-->
+<!doctype html>
+
+<meta charset="utf-8">
+<title>Celions Demo</title>
+
+<link rel="stylesheet" href="demo.css">
+<script src="https://cdn.bootcdn.net/ajax/libs/d3/7.8.4/d3.min.js"></script>
+<script src="../dist/index.umd.js"></script>
+
+<h1>Celions Demo</h1>
+
+<div>
+  <button id="reset">重置</button>
+  <button id="play">播放</button>
+  <button id="amplify">放大</button>
+  <button id="shrink">缩小</button>
+</div>
+<style id="css">
+
+</style>
+
+<svg id="celonis-demo" width=960 height=600></svg>
+
+
+
+<script id="js">
+  let svg = {
+    // range: [0, 1, 2, 3, 4, 5, 6, 7, 4, 5, 6, 7, 8],
+    range: [0, 1, 2, 3, 4, 5, 6, 6, 6, 6, 6, 6, 6, 7, 8],
+    chart: {},
+    innerContainer: {},
+    graph: {},
+    rankdir: 'TB',
+    zoom: {
+      transform: {},
+    },
+    initialScale: 0.75,
+    render: null,
+  }
+  const dataset = {
+    nodes: [
+      { id: 0, label: "开始0", shape: "circle" },
+      { id: 9, label: "节点711", shape: "circle" },
+      { id: 1, label: "节点1", shape: "circle" },
+      { id: 2, label: "节点2", shape: "circle" },
+      { id: 3, label: "节点3", shape: "circle" },
+      { id: 4, label: "节点4", shape: "circle" },
+      { id: 5, label: "节点5", shape: "circle" },
+      { id: 6, label: "节点6", shape: "circle" },
+      { id: 7, label: "节点7", shape: "circle" },
+      { id: 8, label: "结束8", shape: "circle", isEnd: true },
+    ],
+    // TODO: 待研究，排列顺序不一样可能会导致线段交叉，目前只能尝试交换顺序去解决
+    // TODO: 结束节点的 rank 层级辨识度不太高，待解决
+    edges: [
+      { source: 0, target: 1, label: "流转1" },
+      { source: 1, target: 9, label: "流转" },
+      { source: 1, target: 2, label: "流转" },
+      { source: 2, target: 3, label: "流转" },
+      { source: 3, target: 5, label: "流转" },
+      { source: 3, target: 4, label: "流转" },
+      { source: 4, target: 5, label: "流转" },
+      { source: 5, target: 6, label: "流转" },
+      { source: 6, target: 7, label: "流转" },
+      { source: 7, target: 8, label: "流转" },
+      { source: 7, target: 4, label: "流转" },
+      { source: 6, target: 6, label: "流转" },
+    ],
+  }
+
+  // 获取路线 path 集合
+  function getPathLineList() {
+    const pathList = []
+    const pathGroupList = svg.chart
+      .selectAll('.edgePaths > .edgePath')
+      .each(function () {
+        const $pathNode = d3
+          .select(this)
+          .select('path')
+          .node()
+        pathList.push($pathNode)
+      })
+    return {
+      pathGroupList, // 带 g.path 集合
+      pathList: d3.selectAll(pathList), // 纯 path 集合
+    }
+  }
+  // 获取节点 node 集合
+  function getNodeList(range = []) {
+    const nodeList = svg.chart.selectAll('.nodes > .node')
+    return !range.length
+      ? nodeList
+      : nodeList.filter(function () {
+        const flag = Number(
+          d3
+            .select(this)
+            .attr('id')
+            .split('-')[1]
+        )
+        return range.includes(flag)
+      })
+  }
+
+  // 解析并获取 transform: translate
+  function getTranslateValues(element) {
+    const style = window.getComputedStyle(element)
+    const matrix =
+      style.transform || style.webkitTransform || style.mozTransform
+
+    // No transform property. Simply return 0 values.
+    if (matrix === 'none') {
+      return {
+        x: 0,
+        y: 0,
+        z: 0,
+      }
+    }
+
+    // Can either be 2d or 3d transform
+    const matrixType = matrix.includes('3d') ? '3d' : '2d'
+    const matrixValues = matrix.match(/matrix.*\((.+)\)/)[1].split(', ')
+
+    // 2d matrices have 6 values
+    // Last 2 values are X and Y.
+    // 2d matrices does not have Z value.
+    if (matrixType === '2d') {
+      return {
+        x: matrixValues[4],
+        y: matrixValues[5],
+        z: 0,
+      }
+    }
+
+    // 3d matrices have 16 values
+    // The 13th, 14th, and 15th values are X, Y, and Z
+    if (matrixType === '3d') {
+      return {
+        x: matrixValues[12],
+        y: matrixValues[13],
+        z: matrixValues[14],
+      }
+    }
+  }
+
+  // 创建虚拟轨迹
+  function createVirtualRoutes() {
+    const { pathGroupList } = getPathLineList()
+    // TODO: 改成 const box = this.svg.innerContainer.append('g') 就与原图重合了
+    // const box = this.svg.chart.append('g')
+    const box = svg.innerContainer.append('g').attr('id', 'v-output')
+
+    pathGroupList.each(function () {
+      const $selfNode = d3.select(this)
+      const pathNode = $selfNode.select('path').node()
+      const group = box.append('g')
+
+      group.append(() => {
+        const cloneNode = d3.select(pathNode).clone(true)
+        return cloneNode.node()
+      })
+      // .attr('opacity', 1)
+    })
+  }
+
+  // 给定节点集合，返回对应路线
+  function getPathListByNodesId(range = [0, 1]) {
+    const { pathGroupList } = getPathLineList()
+    const ids = []
+    range.length &&
+      range.reduce((prev, next) => {
+        ids.push(`${prev}-${next}`)
+        return next
+      })
+
+    return d3.selectAll(
+      ids.map((id) => {
+        return pathGroupList.nodes().find((target) => target.id === id)
+      })
+    )
+  }
+
+  function findNodeById(id) {
+    const nodeList = getNodeList()
+    return nodeList.nodes().find((target) => target.id === `node-${id}`)
+  }
+
+  // 合并动画路线轨迹
+  function combineVirtualRoutes() {
+    const pathList = getPathListByNodesId(svg.range)
+    svg.innerContainer.select('#v-output').remove()
+    svg.innerContainer.append('g').attr('id', 'v-output')
+
+    let combineLine = ''
+    pathList.each(function () {
+      const [sourceNodeId, targetNodeId] = d3
+        .select(this)
+        .attr('id')
+        .split('-')
+      // 首节点
+      const sourceNode = findNodeById(sourceNodeId)
+      // 尾节点
+      const targetNode = findNodeById(targetNodeId)
+      // 关联路径
+      const pathNode = d3
+        .select(this)
+        .select('path')
+        .node()
+
+      // 获取 path 的首尾节点坐标
+      const startPoint = pathNode.getPointAtLength(0)
+      const endPoint = pathNode.getPointAtLength(pathNode.getTotalLength())
+
+      const { x: sourceX, y: sourceY } = getTranslateValues(sourceNode)
+      const { x: targetX, y: targetY } = getTranslateValues(targetNode)
+
+      combineLine =
+        combineLine +
+        `
+          M ${sourceX} ${sourceY}
+          L ${startPoint.x} ${startPoint.y}
+          ${d3.select(pathNode).attr('d')}
+          M ${endPoint.x} ${endPoint.y}
+          L ${targetX} ${targetY}
+        `
+    })
+
+    const len = svg.innerContainer
+      .select('#v-output')
+      .append('g')
+      .attr('id', 'v-group')
+      .append('path')
+      .attr('id', 'moving-line')
+      .attr('fill', 'none')
+      .attr('d', combineLine)
+      .node().getTotalLength()
+  }
+
+  // 创建轨迹动画
+  function createAnimationForVirtualRoutes() {
+    const vGroup = svg.innerContainer.select('#v-group')
+    vGroup
+      .append('circle')
+      .attr('fill', 'red')
+      .attr('r', 10)
+      .transition()
+      .duration(5000)
+      .ease(d3.easeLinear)
+      .attrTween('transform', function () {
+        const movingLine = vGroup.select('#moving-line').node()
+        const len = movingLine.getTotalLength()
+
+        return function (t) {
+          const point = movingLine.getPointAtLength(len * t)
+          return `translate(${point.x}, ${point.y})`
+        }
+      })
+      .remove()
+  }
+
+  // 创建线条过渡效果
+  function createTransitionList() {
+    const { pathList } = getPathLineList()
+    pathList
+      .attr('stroke-width', '3')
+      .attr('fill', 'none')
+      .attr('opacity', 0)
+      .transition()
+      .duration(1500)
+      .ease(d3.easeLinear)
+      .delay(400)
+      .attrTween('stroke-dashoffset', function () {
+        const $path = d3.select(this)
+        const totalLength = $path.node().getTotalLength()
+        $path.attr('stroke-dasharray', `${totalLength}, ${totalLength}`)
+        return function (t) {
+          return totalLength * (1 - t)
+        }
+      })
+      .attrTween('marker-end', function () {
+        const $path = d3.select(this)
+        const marker = $path.attr('marker-end')
+        $path.attr('marker-end', '')
+        return function () {
+          return marker
+        }
+      })
+      .attr('stroke', '#000')
+      .attr('opacity', 1)
+  }
+
+  function setScaleMin() {
+    svg.initialScale -= 0.15
+    if (svg.initialScale < 0) {
+      svg.initialScale = 0.15
+    }
+    setGraphInnerContainerScale()
+  }
+  function setScaleMax() {
+    svg.initialScale += 0.15
+    setGraphInnerContainerScale()
+  }
+  function setInitOptions() {
+    const containerWidth = 1000
+    const margin = { top: 10, right: 10, bottom: 10, left: 10 }
+    const width = containerWidth - margin.left - margin.right
+    svg.chart = d3
+      .select('#celonis-demo')
+      .attr('width', width + margin.left + margin.right)
+    svg.innerContainer = svg.chart.append('g')
+
+    window.svg = svg
+
+    return {
+      containerWidth,
+      margin,
+      width,
+    }
+  }
+
+  // 创建渲染器
+  function renderGraph() {
+    svg.render = svg.render || new dagreD3.render()
+    svg.render(svg.innerContainer, svg.graph)
+  }
+  // 建立拖拽缩放
+  function setGraphZoom() {
+    svg.zoom = d3.zoom().on('zoom', () => {
+      svg.innerContainer.attr('transform', d3.zoomTransform(svg.chart.node()))
+    })
+    svg.chart.call(svg.zoom)
+  }
+  // 渲染完毕后的图纸居中
+  function setGraphCenter() {
+    svg.chart.call(
+      svg.zoom.transform,
+      d3.zoomIdentity
+        .translate(
+          (svg.chart.attr('width') -
+            svg.graph.graph().width * svg.initialScale) /
+          2,
+          20
+        )
+        .scale(svg.initialScale)
+    )
+    svg.chart.attr(
+      'height',
+      svg.graph.graph().height * svg.initialScale + 40
+    )
+  }
+  function setGraphInnerContainerScale() {
+    svg.zoom.scaleTo(svg.chart, svg.initialScale)
+  }
+  // 重选染
+  // TODO: 可能有性能问题
+  function rerender() {
+    svg.initialScale = 0.75
+    svg.graph.setGraph({
+      rankdir: svg.rankdir,
+    })
+    setGraphZoom()
+    renderGraph()
+    setGraphCenter()
+    createTransitionList()
+    // createVirtualRoutes()
+    combineVirtualRoutes()
+    // createAnimationForVirtualRoutes()
+  }
+
+  function createGraph() {
+    // 初始化创建
+    svg.graph = new dagreD3.graphlib.Graph()
+    svg.graph.setGraph({
+      rankdir: svg.rankdir,
+    })
+
+    // 添加节点
+    dataset.nodes.forEach((node) => {
+      svg.graph.setNode(node.id, {
+        id: `node-${node.id}`,
+        label: node.label,
+        shape: node.shape,
+        clusterLabelPos: 'top',
+        style: `
+            fill: yellow;
+            stroke: #000;
+          `,
+      })
+    })
+    // 添加节点关系
+    dataset.edges.forEach((edge) => {
+      svg.graph.setEdge(edge.source, edge.target, {
+        label: edge.label,
+        id: `${edge.source}-${edge.target}`,
+        style: `
+            fill: none;
+            stroke-width: 3px;
+            stroke: #000;
+            ${
+          // TODO: 可抽离配置，目前是将数据结构写死的，开始和结束特殊标记
+          edge.source === 0 ||
+            dataset.nodes.find((node) => node.id === edge.target).isEnd
+            ? 'stroke-dasharray: 5, 5'
+            : ''
+          };
+          `,
+        // arrowhead: "hollowPoint",
+        curve: d3.curveBasis,
+        arrowheadClass: 'arrowhead',
+      })
+    })
+
+    setGraphZoom()
+    renderGraph()
+    setGraphCenter()
+    combineVirtualRoutes()
+  }
+
+  setInitOptions()
+  createGraph()
+
+
+  document.getElementById("play").onclick = () => {
+    createAnimationForVirtualRoutes()
+  }
+  document.getElementById("reset").onclick = () => {
+    rerender()
+  }
+  document.getElementById("amplify").onclick = () => {
+    setScaleMax()
+  }
+  document.getElementById("shrink").onclick = () => {
+    setScaleMin()
+  }
+
+</script>
+
+<script src="demo.js"></script>
