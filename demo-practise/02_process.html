@@ -1,0 +1,167 @@
+<!--
+ * @Author: sfy
+ * @Date: 2023-04-09 22:54:58
+ * @LastEditors: sfy
+ * @LastEditTime: 2023-04-10 23:40:42
+ * @FilePath: /dagre/demo-practise/02_process.html
+ * @Description: update here
+-->
+<!doctype html>
+
+<meta charset="utf-8">
+<title>Dagre D3 Demo: Process</title>
+
+<link rel="stylesheet" href="demo.css">
+<script src="https://cdn.bootcdn.net/ajax/libs/d3/7.8.4/d3.min.js"></script>
+<script src="../dist/index.umd.js"></script>
+
+<style id="css">
+
+</style>
+
+<h1>Columnar</h1>
+
+<div class="d3Chart"></div>
+
+<script id="js">
+  const svg = d3.select('.d3Chart')
+    .append('svg')
+    .attr('width', 800)
+    .attr('height', 700)
+    .style('background-color', '#1a3055')
+
+  // 创建 一个组 移动位置
+  const chart = svg.append('g')
+    .attr('transform', 'translate(20, -20)')
+
+  // 定义数据：表示矩形的宽度
+  const dataset = [
+    {
+      id: 1,
+      x: 50,
+      y: 50
+    }, {
+      id: 2,
+      x: 50,
+      y: 200
+    }, {
+      id: 3,
+      x: 50,
+      y: 350
+    }, {
+      id: 4,
+      x: 50,
+      y: 500
+    }, {
+      id: 5,
+      x: 50,
+      y: 650
+    }]
+
+  const level1 = [
+    {
+      id: 6,
+      x: 150,
+      y: 75,
+    },
+    {
+      id: 6,
+      x: 250,
+      y: 75,
+    },
+    {
+      id: 7,
+      x: 200,
+      y: 125,
+    },
+    {
+      id: 8,
+      x: 300,
+      y: 125,
+    },
+  ]
+
+  const level2 = [
+    {
+      id: 9,
+      x: 150,
+      y: 250,
+    },
+    {
+      id: 10,
+      x: 250,
+      y: 250,
+    },
+    {
+      id: 11,
+      x: 350,
+      y: 250,
+    },
+    {
+      id: 12,
+      x: 450,
+      y: 250,
+    },
+    {
+      id: 13,
+      x: 200,
+      y: 300,
+    },
+    {
+      id: 14,
+      x: 300,
+      y: 300,
+    },
+  ]
+
+
+  const dataSource = [...dataset, ...level1, ...level2]
+  const rectHeight = 25;
+
+  chart.selectAll("rect")  // 绘制矩形使用rect标签
+    .data(dataSource)   // 绑定数据dataset
+    .enter()     // 指定数据集中的enter部分
+    .append("rect")   // 添加足够的元素。有数据但是没有图形元素的时候，使用append()进行追加
+    .attr("x", function (d, i) {  // 定义左上角的坐标y：d是作用的数据，i是索引号
+      return d.x;
+    })  // 定义左上角的坐标x
+    .attr("y", function (d, i) {  // 定义左上角的坐标y：d是作用的数据，i是索引号
+      return d.y;
+    })
+    .attr("width", 50)
+    .attr("height", rectHeight)  // 设置长度
+    .attr("fill", "blue");   // 设置属性颜色
+
+  chart.append('path').attr('class', 'u-path')
+
+  const x0 = 300,
+    y0 = 125,
+    cpx = 1050,
+    cpy = 280,
+    x = 200,
+    y = 320;
+
+  const path = d3.path();
+  path.moveTo(x0, y0);
+  path.quadraticCurveTo(cpx, cpy, x, y);
+
+  const points = [[x0, y0], [cpx, cpy], [x, y]]
+  
+  const draw = () => {
+      const path = d3.path();
+      path.moveTo(...points[0]);
+      path.quadraticCurveTo(...points[1], ...points[2]);
+      return path;
+    };
+
+    chart.append('path')
+    .attr('class', 'u-path')
+    .attr("d", draw())
+    .attr("stroke", "red")
+    .attr("stroke-width", 3)
+    .attr("fill", "none");
+
+
+</script>
+
+<script src="demo.js"></script>
