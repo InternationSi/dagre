@@ -2,7 +2,7 @@
  * @Author: sfy
  * @Date: 2023-04-09 22:54:58
  * @LastEditors: sfy
- * @LastEditTime: 2023-04-10 23:40:42
+ * @LastEditTime: 2023-04-11 22:52:09
  * @FilePath: /dagre/demo-practise/02_process.html
  * @Description: update here
 -->
@@ -132,8 +132,10 @@
     .attr("height", rectHeight)  // 设置长度
     .attr("fill", "blue");   // 设置属性颜色
 
-  chart.append('path').attr('class', 'u-path')
 
+  /**
+   * 二次贝塞尔曲线
+  */
   const x0 = 300,
     y0 = 125,
     cpx = 1050,
@@ -141,26 +143,48 @@
     x = 200,
     y = 320;
 
-  const path = d3.path();
-  path.moveTo(x0, y0);
-  path.quadraticCurveTo(cpx, cpy, x, y);
-
   const points = [[x0, y0], [cpx, cpy], [x, y]]
-  
-  const draw = () => {
-      const path = d3.path();
-      path.moveTo(...points[0]);
-      path.quadraticCurveTo(...points[1], ...points[2]);
-      return path;
-    };
 
-    chart.append('path')
-    .attr('class', 'u-path')
-    .attr("d", draw())
+  const drawQua = () => {
+    const path = d3.path();
+    path.moveTo(...points[0]);
+    path.quadraticCurveTo(...points[1], ...points[2]);
+    return path;
+  };
+
+  chart.append('path')
+    .attr("d", drawQua())
     .attr("stroke", "red")
     .attr("stroke-width", 3)
     .attr("fill", "none");
 
+  /**
+   * 三次贝塞尔曲线
+  */
+
+  const t0 = 300,
+    h0 = 125,
+    cpt1 = 450,
+    cph1 = 85,
+    cpt2 = 800,
+    cph2 = 400,
+    t = 200,
+    h = 320;
+
+  const pos = [[t0, h0], [cpt1, cph1], [cpt2, cph2], [t, h]]
+
+  const drawBez = () => {
+    const path = d3.path();
+    path.moveTo(...pos[0]);
+    path.bezierCurveTo(...pos[1], ...pos[2], ...pos[3]);
+    return path;
+  };
+
+  chart.append('path')
+    .attr("d", drawBez())
+    .attr("stroke", "white")
+    .attr("stroke-width", 3)
+    .attr("fill", "none");
 
 </script>
 
